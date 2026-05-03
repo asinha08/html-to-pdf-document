@@ -5,6 +5,12 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
+  "author": "Ashish Kumar Sinha",
+  "email": "ashish.sinha@gmail.com",
+  "homepage": "https://github.com/asinha08/html-to-pdf-document",
+  "bugs": {
+    "url": "https://github.com/asinha08/html-to-pdf-document/issues"
+  },
   "files": [
     "dist",
     "README.md",
