@@ -28,10 +28,10 @@ if (content) {
 ## Install
 
 ```sh
-npm install html-to-pdf-document html2canvas jspdf
+npm install html-to-pdf-document
 ```
 
-`html2canvas` and `jspdf` are peer dependencies so apps can control their own versions.
+`html2canvas` and `jspdf` are regular runtime dependencies, so npm installs them automatically when users install this package.
 
 ## Usage
 
