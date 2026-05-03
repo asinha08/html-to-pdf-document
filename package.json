@@ -1,0 +1,49 @@
+{
+  "name": "html-to-pdf-document",
+  "version": "0.1.0",
+  "description": "A TypeScript-first browser library for converting HTML elements into downloadable PDF documents.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "html",
+    "pdf",
+    "typescript",
+    "browser",
+    "dom",
+    "jspdf",
+    "html2canvas"
+  ],
+  "peerDependencies": {
+    "html2canvas": ">=1.4.1 <2",
+    "jspdf": ">=4.2.1 <5"
+  },
+  "devDependencies": {
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "tsup": "^8.3.6",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.5"
+  }
+}

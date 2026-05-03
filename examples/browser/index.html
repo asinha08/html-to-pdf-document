@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>html-to-pdf-document example</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "html2canvas": "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js",
+          "jspdf": "https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.es.min.js"
+        }
+      }
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f5f7fb;
+        color: #1d2433;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+      }
+
+      main {
+        width: min(920px, 100%);
+      }
+
+      button {
+        border: 0;
+        border-radius: 6px;
+        padding: 10px 14px;
+        background: #2556d9;
+        color: #ffffff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      #content-ashish {
+        margin-top: 20px;
+        background: #ffffff;
+        border: 1px solid #dce3ef;
+        border-radius: 8px;
+        padding: 32px;
+        box-shadow: 0 16px 40px rgb(29 36 51 / 12%);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 34px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 24px;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid #e5eaf3;
+        padding: 12px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <button id="download">Download PDF</button>
+
+      <section id="content-ashish">
+        <h1>Invoice INV-2048</h1>
+        <p>Generated from a live DOM element with TypeScript-friendly PDF output.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Design system implementation</td>
+              <td>1</td>
+              <td>$2,400</td>
+            </tr>
+            <tr>
+              <td>Rendering QA</td>
+              <td>1</td>
+              <td>$800</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <script type="module">
+      import { htmlToPDF } from "../../dist/index.js";
+
+      document.getElementById("download").addEventListener("click", async () => {
+        const content = document.getElementById("content-ashish");
+
+        if (content) {
+          const pdf = await htmlToPDF({
+            filename: "document.pdf",
+            margin: 32,
+            image: { type: "jpeg", quality: 0.95 }
+          })
+            .from(content)
+            .toPdf();
+
+          const blob = new Blob([pdf], { type: "application/pdf" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+
+          link.href = url;
+          link.download = "document.pdf";
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+      });
+    </script>
+  </body>
+</html>
