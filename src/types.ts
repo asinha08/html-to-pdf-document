@@ -57,6 +57,7 @@ export type MarginInput =
   | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
 
 export type Html2CanvasOptions = NonNullable<Parameters<typeof html2canvas>[1]>;
+export type PageNumberTranslator = (pageNumber: number, totalPages: number) => string;
 
 export interface NormalizedMargin {
   top: number;
@@ -86,11 +87,13 @@ export interface HtmlStringOptions {
 
 export interface HtmlToPDFOptions {
   filename?: string;
+  fontFamily?: string;
   margin?: MarginInput;
   page?: PdfPageOptions;
   image?: PdfImageOptions;
   html?: HtmlStringOptions;
   html2canvas?: Partial<Html2CanvasOptions>;
+  translatePageNumber?: PageNumberTranslator;
 }
 
 export interface ResolvedPdfPageOptions {
@@ -114,11 +117,13 @@ export interface ResolvedHtmlStringOptions {
 
 export interface ResolvedHtmlToPDFOptions {
   filename: string;
+  fontFamily: string;
   margin: NormalizedMargin;
   page: ResolvedPdfPageOptions;
   image: ResolvedPdfImageOptions;
   html: ResolvedHtmlStringOptions;
   html2canvas: Partial<Html2CanvasOptions>;
+  translatePageNumber: PageNumberTranslator;
 }
 
 export type PdfOutputType = "arraybuffer" | "blob" | "datauristring";

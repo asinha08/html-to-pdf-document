@@ -10,6 +10,7 @@ export type {
   MarginInput,
   MarginTuple,
   NormalizedMargin,
+  PageNumberTranslator,
   PdfFormat,
   PdfImageOptions,
   PdfOrientation,

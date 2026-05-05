@@ -7,6 +7,7 @@ import type {
   HtmlToPDFOptions,
   HtmlToPDFSource,
   HtmlToPDFWorker as HtmlToPDFWorkerContract,
+  Html2CanvasOptions,
   PdfOutput,
   PdfOutputType,
   ResolvedHtmlToPDFOptions
@@ -105,10 +106,22 @@ export class HtmlToPDFWorker implements HtmlToPDFWorkerContract {
 
     try {
       await waitForRenderableAssets(preparedSource.element);
-      return await html2canvas(preparedSource.element, this.options.html2canvas);
+      return await html2canvas(preparedSource.element, this.createHtml2CanvasOptions());
     } finally {
       preparedSource.cleanup();
     }
+  }
+
+  private createHtml2CanvasOptions(): Partial<Html2CanvasOptions> {
+    const userOnclone = this.options.html2canvas.onclone;
+
+    return {
+      ...this.options.html2canvas,
+      onclone: (clonedDocument, clonedElement) => {
+        clonedElement.style.fontFamily = this.options.fontFamily;
+        userOnclone?.(clonedDocument, clonedElement);
+      }
+    };
   }
 
   private getPdfDocument(): Promise<PdfDocument> {

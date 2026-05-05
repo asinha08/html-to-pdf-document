@@ -31,9 +31,21 @@ describe("normalizeMargin", () => {
 });
 
 describe("mergeOptions", () => {
+  it("defaults the PDF content font family to Arial", () => {
+    expect(resolveOptions().fontFamily).toBe("Arial");
+  });
+
+  it("defaults the page number translator to English page labels", () => {
+    expect(resolveOptions().translatePageNumber(1, 3)).toBe("page 1 of 3");
+  });
+
   it("deep merges nested option groups", () => {
+    const translatePageNumber = (pageNumber: number, totalPages: number) =>
+      `seite ${pageNumber} von ${totalPages}`;
     const current = resolveOptions({
       filename: "invoice.pdf",
+      fontFamily: "Inter, sans-serif",
+      translatePageNumber,
       image: {
         type: "png",
         quality: 1
@@ -44,17 +56,18 @@ describe("mergeOptions", () => {
       }
     });
 
-    expect(
-      mergeOptions(current, {
-        image: {
-          quality: 0.7
-        },
-        page: {
-          orientation: "landscape"
-        }
-      })
-    ).toMatchObject({
+    const merged = mergeOptions(current, {
+      image: {
+        quality: 0.7
+      },
+      page: {
+        orientation: "landscape"
+      }
+    });
+
+    expect(merged).toMatchObject({
       filename: "invoice.pdf",
+      fontFamily: "Inter, sans-serif",
       image: {
         type: "png",
         quality: 0.7
@@ -64,5 +77,6 @@ describe("mergeOptions", () => {
         orientation: "landscape"
       }
     });
+    expect(merged.translatePageNumber(2, 4)).toBe("seite 2 von 4");
   });
 });

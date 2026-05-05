@@ -10,9 +10,7 @@ import { htmlToPDF } from "html-to-pdf-document";
 const content = document.getElementById("content-ashish");
 
 if (content) {
-  const pdf = await htmlToPDF()
-    .from(content)
-    .toPdf();
+  const pdf = await htmlToPDF().from(content).toPdf();
 
   const blob = new Blob([pdf], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
@@ -43,9 +41,7 @@ import { htmlToPDF } from "html-to-pdf-document";
 const content = document.getElementById("invoice");
 
 if (content) {
-  await htmlToPDF({ filename: "invoice.pdf" })
-    .from(content)
-    .save();
+  await htmlToPDF({ filename: "invoice.pdf" }).from(content).save();
 }
 ```
 
@@ -71,7 +67,7 @@ const html = `
 `;
 
 const pdf = await htmlToPDF({
-  html: { width: 794, height: 1123 }
+  html: { width: 794, height: 1123 },
 })
   .from(html)
   .toPdf();
@@ -81,22 +77,62 @@ const pdf = await htmlToPDF({
 
 ```ts
 const worker = htmlToPDF({
+  fontFamily: "Inter, Arial, sans-serif",
+  translatePageNumber: (pageNumber, totalPages) => `page ${pageNumber} of ${totalPages}`,
   margin: [32, 40],
   page: {
     format: "a4",
     orientation: "portrait",
-    unit: "pt"
+    unit: "pt",
   },
   image: {
     type: "jpeg",
-    quality: 0.95
+    quality: 0.95,
   },
   html2canvas: {
     scale: 2,
     useCORS: true,
-    backgroundColor: "#ffffff"
-  }
+    backgroundColor: "#ffffff",
+  },
 });
+```
+
+### React component example
+
+```ts
+import { htmlToPDF } from "html-to-pdf-document";
+import { useCallback, useId } from "react";
+
+export default function GenerateAgreement() {
+  const containerId = useId();
+  const generatePDF = useCallback(async () => {
+    const content = document.getElementById(containerId);
+    if (content) {
+      const pdf = await htmlToPDF().from(content.innerHTML).toPdf();
+      const blob = new Blob([pdf], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "document.pdf";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  }, [containerId]);
+
+  return (
+    <div>
+      <button onClick={generatePDF}>
+        Generate PDF
+      </button>
+      <div id={containerId}>
+        <h1>Hello PDF</h1>
+        <p>This will be converted to PDF.</p>
+      </div>
+    </div>
+  );
+}
+
 ```
 
 ## API
@@ -115,6 +151,10 @@ htmlToPDF(options?: HtmlToPDFOptions): HtmlToPDFWorker
 - `toDataUri()` returns a PDF data URI string.
 - `output("arraybuffer" | "blob" | "datauristring")` returns a typed PDF output.
 - `save(filename?)` downloads the PDF.
+
+`fontFamily` defaults to `Arial` and is applied to the cloned content before rendering, so the live page is not mutated.
+
+`translatePageNumber` defaults to the `page 1 of 1` label format and controls the footer label added to each generated PDF page. Return an empty string to skip the page number text.
 
 ## Notes
 

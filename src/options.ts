@@ -2,10 +2,14 @@ import type {
   HtmlToPDFOptions,
   MarginInput,
   NormalizedMargin,
+  PageNumberTranslator,
   ResolvedHtmlToPDFOptions
 } from "./types";
 
 const DEFAULT_MARGIN = 36;
+const DEFAULT_FONT_FAMILY = "Arial";
+const DEFAULT_PAGE_NUMBER_TRANSLATOR: PageNumberTranslator = (pageNumber, totalPages) =>
+  `page ${pageNumber} of ${totalPages}`;
 
 export function normalizeMargin(margin: MarginInput = DEFAULT_MARGIN): NormalizedMargin {
   if (typeof margin === "number") {
@@ -48,6 +52,7 @@ export function getCanvasScale(): number {
 export function resolveOptions(options: HtmlToPDFOptions = {}): ResolvedHtmlToPDFOptions {
   return {
     filename: options.filename ?? "document.pdf",
+    fontFamily: options.fontFamily ?? DEFAULT_FONT_FAMILY,
     margin: normalizeMargin(options.margin),
     page: {
       format: options.page?.format ?? "a4",
@@ -70,7 +75,8 @@ export function resolveOptions(options: HtmlToPDFOptions = {}): ResolvedHtmlToPD
       useCORS: true,
       scale: getCanvasScale(),
       ...options.html2canvas
-    }
+    },
+    translatePageNumber: options.translatePageNumber ?? DEFAULT_PAGE_NUMBER_TRANSLATOR
   };
 }
 
@@ -80,6 +86,7 @@ export function mergeOptions(
 ): ResolvedHtmlToPDFOptions {
   return {
     filename: next.filename ?? current.filename,
+    fontFamily: next.fontFamily ?? current.fontFamily,
     margin: next.margin === undefined ? current.margin : normalizeMargin(next.margin),
     page: {
       ...current.page,
@@ -96,6 +103,7 @@ export function mergeOptions(
     html2canvas: {
       ...current.html2canvas,
       ...next.html2canvas
-    }
+    },
+    translatePageNumber: next.translatePageNumber ?? current.translatePageNumber
   };
 }

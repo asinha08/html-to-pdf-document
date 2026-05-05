@@ -31,6 +31,7 @@ export function renderCanvasToPdf(
   }
 
   const sliceHeight = Math.max(1, Math.floor((printableHeight / printableWidth) * canvas.width));
+  const totalPages = Math.ceil(canvas.height / sliceHeight);
   const sliceCanvas = canvas.ownerDocument.createElement("canvas");
   const sliceContext = sliceCanvas.getContext("2d");
 
@@ -73,9 +74,33 @@ export function renderCanvasToPdf(
       undefined,
       "FAST"
     );
+
+    addPageNumber(pdf, pageIndex + 1, totalPages, options);
   }
 
   return pdf;
+}
+
+function addPageNumber(
+  pdf: PdfDocument,
+  pageNumber: number,
+  totalPages: number,
+  options: ResolvedHtmlToPDFOptions
+): void {
+  const label = options.translatePageNumber(pageNumber, totalPages);
+
+  if (!label) {
+    return;
+  }
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const footerY = pageHeight - (options.margin.bottom > 0 ? options.margin.bottom / 2 : 12);
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  pdf.setTextColor(90);
+  pdf.text(label, pageWidth / 2, footerY, { align: "center" });
 }
 
 function toMimeType(type: ImageType): string {
