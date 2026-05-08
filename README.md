@@ -78,7 +78,8 @@ const pdf = await htmlToPDF({
 ```ts
 const worker = htmlToPDF({
   fontFamily: "Inter, Arial, sans-serif",
-  translatePageNumber: (pageNumber, totalPages) => `page ${pageNumber} of ${totalPages}`,
+  translatePageNumber: (pageNumber, totalPages) =>
+    `page ${pageNumber} of ${totalPages}`,
   margin: [32, 40],
   page: {
     format: "a4",
@@ -161,7 +162,7 @@ By default, each generated PDF page gets a bottom-right footer label in the `pag
 ```ts
 const pdf = await htmlToPDF({
   translatePageNumber: (pageNumber, totalPages) =>
-    `page ${pageNumber} of ${totalPages}`
+    `page ${pageNumber} of ${totalPages}`,
 })
   .from(content)
   .toPdf();
@@ -173,7 +174,7 @@ For translated labels, return the localized text from `translatePageNumber`:
 const pdf = await htmlToPDF({
   fontFamily: "Noto Sans Devanagari, Arial, sans-serif",
   translatePageNumber: (pageNumber, totalPages) =>
-    `पृष्ठ ${pageNumber} का ${totalPages}`
+    `पृष्ठ ${pageNumber} का ${totalPages}`,
 })
   .from(content)
   .toPdf();

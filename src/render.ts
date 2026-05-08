@@ -31,7 +31,8 @@ export function renderCanvasToPdf(
   }
 
   const sliceHeight = Math.max(1, Math.floor((printableHeight / printableWidth) * canvas.width));
-  const totalPages = Math.ceil(canvas.height / sliceHeight);
+  const renderableCanvasHeight = getRenderableCanvasHeight(canvas, sliceHeight);
+  const totalPages = Math.ceil(renderableCanvasHeight / sliceHeight);
   const sliceCanvas = canvas.ownerDocument.createElement("canvas");
   const sliceContext = sliceCanvas.getContext("2d");
 
@@ -41,8 +42,8 @@ export function renderCanvasToPdf(
 
   sliceCanvas.width = canvas.width;
 
-  for (let y = 0, pageIndex = 0; y < canvas.height; y += sliceHeight, pageIndex += 1) {
-    const currentSliceHeight = Math.min(sliceHeight, canvas.height - y);
+  for (let y = 0, pageIndex = 0; y < renderableCanvasHeight; y += sliceHeight, pageIndex += 1) {
+    const currentSliceHeight = Math.min(sliceHeight, renderableCanvasHeight - y);
     sliceCanvas.height = currentSliceHeight;
     sliceContext.clearRect(0, 0, sliceCanvas.width, sliceCanvas.height);
     sliceContext.drawImage(
@@ -79,6 +80,71 @@ export function renderCanvasToPdf(
   }
 
   return pdf;
+}
+
+function getRenderableCanvasHeight(canvas: HTMLCanvasElement, sliceHeight: number): number {
+  if (canvas.height <= sliceHeight) {
+    return canvas.height;
+  }
+
+  const trailingSliceHeight = canvas.height % sliceHeight;
+
+  if (trailingSliceHeight === 0) {
+    return canvas.height;
+  }
+
+  const maxTrailingBlankSliceHeight = Math.max(1, Math.floor(sliceHeight * 0.05));
+
+  if (trailingSliceHeight > maxTrailingBlankSliceHeight) {
+    return canvas.height;
+  }
+
+  const trailingSliceStart = canvas.height - trailingSliceHeight;
+
+  return isCanvasRegionBlank(canvas, trailingSliceStart, trailingSliceHeight)
+    ? trailingSliceStart
+    : canvas.height;
+}
+
+function isCanvasRegionBlank(
+  canvas: HTMLCanvasElement,
+  startY: number,
+  height: number
+): boolean {
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return false;
+  }
+
+  try {
+    const data = context.getImageData(0, startY, canvas.width, height).data;
+
+    if (data.length < 4) {
+      return true;
+    }
+
+    const backgroundRed = data[0] ?? 0;
+    const backgroundGreen = data[1] ?? 0;
+    const backgroundBlue = data[2] ?? 0;
+    const backgroundAlpha = data[3] ?? 0;
+    const tolerance = 8;
+
+    for (let index = 4; index < data.length; index += 4) {
+      if (
+        Math.abs((data[index] ?? 0) - backgroundRed) > tolerance ||
+        Math.abs((data[index + 1] ?? 0) - backgroundGreen) > tolerance ||
+        Math.abs((data[index + 2] ?? 0) - backgroundBlue) > tolerance ||
+        Math.abs((data[index + 3] ?? 0) - backgroundAlpha) > tolerance
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function addPageNumber(
