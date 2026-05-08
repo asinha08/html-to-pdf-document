@@ -154,7 +154,32 @@ htmlToPDF(options?: HtmlToPDFOptions): HtmlToPDFWorker
 
 `fontFamily` defaults to `Arial` and is applied to the cloned content before rendering, so the live page is not mutated.
 
-`translatePageNumber` defaults to the `page 1 of 1` label format and controls the footer label added to each generated PDF page. Return an empty string to skip the page number text.
+### Page Numbers And Translation
+
+By default, each generated PDF page gets a bottom-right footer label in the `page 1 of 1` format. Customize it with `translatePageNumber`:
+
+```ts
+const pdf = await htmlToPDF({
+  translatePageNumber: (pageNumber, totalPages) =>
+    `page ${pageNumber} of ${totalPages}`
+})
+  .from(content)
+  .toPdf();
+```
+
+For translated labels, return the localized text from `translatePageNumber`:
+
+```ts
+const pdf = await htmlToPDF({
+  fontFamily: "Noto Sans Devanagari, Arial, sans-serif",
+  translatePageNumber: (pageNumber, totalPages) =>
+    `पृष्ठ ${pageNumber} का ${totalPages}`
+})
+  .from(content)
+  .toPdf();
+```
+
+The page-number footer is rendered through a browser canvas before being added to the PDF. This avoids garbled output from `jsPDF` built-in fonts and preserves translated labels visually, including Hindi and other non-Latin scripts. Make sure the browser can load a font that supports the target script. Return an empty string from `translatePageNumber` to skip the footer text.
 
 ## Notes
 

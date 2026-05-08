@@ -31,11 +31,15 @@ This runs:
 - `npm test`
 - `npm run build`
 
+Renderer changes, type changes, and README/documentation changes should be made before this step so `dist` and the npm README stay in sync.
+
 You can also inspect the package contents without publishing:
 
 ```sh
 npm pack --dry-run
 ```
+
+Confirm the dry-run output includes the current `README.md`, `LICENSE`, `package.json`, and rebuilt `dist` files. The README shown on npm comes from this package tarball.
 
 The published package is limited by the `files` field in `package.json`, currently:
 
