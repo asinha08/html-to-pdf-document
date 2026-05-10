@@ -91,12 +91,32 @@ const worker = htmlToPDF({
     quality: 0.95,
   },
   html2canvas: {
-    scale: 2,
+    scale: 3,
     useCORS: true,
     backgroundColor: "#ffffff",
   },
 });
 ```
+
+### Sharper PDF Text
+
+This library captures HTML as an image before placing it into the PDF. For sharper text when users zoom the PDF, increase the `html2canvas.scale` value:
+
+```ts
+const pdf = await htmlToPDF({
+  html2canvas: {
+    scale: 3,
+  },
+  image: {
+    type: "png",
+    quality: 1,
+  },
+})
+  .from(content)
+  .toPdf();
+```
+
+The default capture scale is at least `2`. Higher values, such as `3`, produce sharper zoomed text but also increase memory usage, generation time, and PDF size. Because the current renderer is image-based, text will not be as infinitely sharp as vector text from browser print/Headless Chrome PDF output.
 
 ### React component example
 
@@ -184,6 +204,6 @@ The page-number footer is rendered through a browser canvas before being added t
 
 ## Notes
 
-This is a client-side renderer. It captures the DOM with `html2canvas` and places the resulting image into a paginated `jsPDF` document. That keeps the API simple and works well for invoices, receipts, dashboards, and browser-generated reports.
+This is a client-side renderer. It captures the DOM with `html2canvas` and places the resulting image into a paginated `jsPDF` document. The capture uses the source element's scroll dimensions with a small bottom buffer, a default canvas scale of at least `2`, and page breaks chosen near blank horizontal space when possible. That reduces clipped content and improves zoomed text clarity while keeping the API simple for invoices, receipts, dashboards, and browser-generated reports.
 
 For pixel-perfect CSS print fidelity, server-side Headless Chrome rendering is still the stronger architecture. [Doppio documents that approach](https://doc.doppio.sh/) as a managed API built around Headless Chrome rendering.

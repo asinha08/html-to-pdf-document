@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { mergeOptions, normalizeMargin, resolveOptions } from "../src/options";
+import { getCanvasScale, mergeOptions, normalizeMargin, resolveOptions } from "../src/options";
+
+describe("getCanvasScale", () => {
+  it("uses at least a 2x canvas scale for sharper PDF text", () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, "devicePixelRatio");
+
+    Object.defineProperty(globalThis, "devicePixelRatio", {
+      configurable: true,
+      value: 1
+    });
+
+    try {
+      expect(getCanvasScale()).toBe(2);
+    } finally {
+      if (descriptor) {
+        Object.defineProperty(globalThis, "devicePixelRatio", descriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "devicePixelRatio");
+      }
+    }
+  });
+});
 
 describe("normalizeMargin", () => {
   it("uses the same margin on every side for a number", () => {

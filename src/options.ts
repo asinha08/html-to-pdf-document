@@ -8,6 +8,7 @@ import type {
 
 const DEFAULT_MARGIN = 36;
 const DEFAULT_FONT_FAMILY = "Arial";
+const DEFAULT_CANVAS_SCALE = 2;
 const DEFAULT_PAGE_NUMBER_TRANSLATOR: PageNumberTranslator = (pageNumber, totalPages) =>
   `page ${pageNumber} of ${totalPages}`;
 
@@ -46,7 +47,9 @@ export function normalizeMargin(margin: MarginInput = DEFAULT_MARGIN): Normalize
 
 export function getCanvasScale(): number {
   const ratio = globalThis.devicePixelRatio;
-  return typeof ratio === "number" && Number.isFinite(ratio) ? Math.max(1, ratio) : 2;
+  return typeof ratio === "number" && Number.isFinite(ratio)
+    ? Math.max(DEFAULT_CANVAS_SCALE, ratio)
+    : DEFAULT_CANVAS_SCALE;
 }
 
 export function resolveOptions(options: HtmlToPDFOptions = {}): ResolvedHtmlToPDFOptions {

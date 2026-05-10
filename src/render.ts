@@ -32,7 +32,8 @@ export function renderCanvasToPdf(
 
   const sliceHeight = Math.max(1, Math.floor((printableHeight / printableWidth) * canvas.width));
   const renderableCanvasHeight = getRenderableCanvasHeight(canvas, sliceHeight);
-  const totalPages = Math.ceil(renderableCanvasHeight / sliceHeight);
+  const pageSlices = createPageSlices(canvas, sliceHeight, renderableCanvasHeight);
+  const totalPages = pageSlices.length;
   const sliceCanvas = canvas.ownerDocument.createElement("canvas");
   const sliceContext = sliceCanvas.getContext("2d");
 
@@ -42,8 +43,8 @@ export function renderCanvasToPdf(
 
   sliceCanvas.width = canvas.width;
 
-  for (let y = 0, pageIndex = 0; y < renderableCanvasHeight; y += sliceHeight, pageIndex += 1) {
-    const currentSliceHeight = Math.min(sliceHeight, renderableCanvasHeight - y);
+  for (const [pageIndex, pageSlice] of pageSlices.entries()) {
+    const { y, height: currentSliceHeight } = pageSlice;
     sliceCanvas.height = currentSliceHeight;
     sliceContext.clearRect(0, 0, sliceCanvas.width, sliceCanvas.height);
     sliceContext.drawImage(
@@ -80,6 +81,82 @@ export function renderCanvasToPdf(
   }
 
   return pdf;
+}
+
+interface PageSlice {
+  y: number;
+  height: number;
+}
+
+function createPageSlices(
+  canvas: HTMLCanvasElement,
+  sliceHeight: number,
+  renderableCanvasHeight: number
+): PageSlice[] {
+  const pageSlices: PageSlice[] = [];
+  let sliceStartY = 0;
+
+  while (sliceStartY < renderableCanvasHeight) {
+    const remainingHeight = renderableCanvasHeight - sliceStartY;
+
+    if (remainingHeight <= sliceHeight) {
+      pageSlices.push({ y: sliceStartY, height: remainingHeight });
+      break;
+    }
+
+    const sliceEndY = findPageSliceEndY(
+      canvas,
+      sliceStartY,
+      sliceHeight,
+      renderableCanvasHeight
+    );
+    const currentSliceHeight = Math.max(1, sliceEndY - sliceStartY);
+
+    pageSlices.push({ y: sliceStartY, height: currentSliceHeight });
+    sliceStartY += currentSliceHeight;
+  }
+
+  return pageSlices;
+}
+
+function findPageSliceEndY(
+  canvas: HTMLCanvasElement,
+  sliceStartY: number,
+  sliceHeight: number,
+  renderableCanvasHeight: number
+): number {
+  const desiredEndY = Math.min(sliceStartY + sliceHeight, renderableCanvasHeight);
+
+  if (desiredEndY >= renderableCanvasHeight) {
+    return renderableCanvasHeight;
+  }
+
+  const minEndY = Math.max(sliceStartY + 1, sliceStartY + Math.floor(sliceHeight * 0.72));
+  const searchBackHeight = Math.min(160, Math.max(24, Math.floor(sliceHeight * 0.12)));
+  const searchStartY = Math.max(minEndY, desiredEndY - searchBackHeight);
+  const bandHeight = Math.min(12, Math.max(4, Math.floor(sliceHeight * 0.006)));
+  const blankBandEndY = findBlankBandEndY(canvas, searchStartY, desiredEndY, bandHeight);
+
+  return blankBandEndY ?? desiredEndY;
+}
+
+function findBlankBandEndY(
+  canvas: HTMLCanvasElement,
+  searchStartY: number,
+  searchEndY: number,
+  bandHeight: number
+): number | undefined {
+  for (
+    let bandStartY = searchEndY - bandHeight;
+    bandStartY >= searchStartY;
+    bandStartY -= 1
+  ) {
+    if (isCanvasRegionBlank(canvas, bandStartY, bandHeight)) {
+      return bandStartY + Math.floor(bandHeight / 2);
+    }
+  }
+
+  return undefined;
 }
 
 function getRenderableCanvasHeight(canvas: HTMLCanvasElement, sliceHeight: number): number {
@@ -124,20 +201,18 @@ function isCanvasRegionBlank(
       return true;
     }
 
-    const backgroundRed = data[0] ?? 0;
-    const backgroundGreen = data[1] ?? 0;
-    const backgroundBlue = data[2] ?? 0;
-    const backgroundAlpha = data[3] ?? 0;
     const tolerance = 8;
+    const stride = canvas.width * 4;
 
-    for (let index = 4; index < data.length; index += 4) {
-      if (
-        Math.abs((data[index] ?? 0) - backgroundRed) > tolerance ||
-        Math.abs((data[index + 1] ?? 0) - backgroundGreen) > tolerance ||
-        Math.abs((data[index + 2] ?? 0) - backgroundBlue) > tolerance ||
-        Math.abs((data[index + 3] ?? 0) - backgroundAlpha) > tolerance
-      ) {
-        return false;
+    // Compare each row to the first row so blank bands can include page backgrounds,
+    // shadows, or margins that vary horizontally but not vertically.
+    for (let row = 1; row < height; row += 1) {
+      const rowOffset = row * stride;
+
+      for (let columnOffset = 0; columnOffset < stride; columnOffset += 4) {
+        if (hasPixelChanged(data, rowOffset + columnOffset, columnOffset, tolerance)) {
+          return false;
+        }
       }
     }
 
@@ -145,6 +220,20 @@ function isCanvasRegionBlank(
   } catch {
     return false;
   }
+}
+
+function hasPixelChanged(
+  data: Uint8ClampedArray,
+  currentOffset: number,
+  baselineOffset: number,
+  tolerance: number
+): boolean {
+  return (
+    Math.abs((data[currentOffset] ?? 0) - (data[baselineOffset] ?? 0)) > tolerance ||
+    Math.abs((data[currentOffset + 1] ?? 0) - (data[baselineOffset + 1] ?? 0)) > tolerance ||
+    Math.abs((data[currentOffset + 2] ?? 0) - (data[baselineOffset + 2] ?? 0)) > tolerance ||
+    Math.abs((data[currentOffset + 3] ?? 0) - (data[baselineOffset + 3] ?? 0)) > tolerance
+  );
 }
 
 function addPageNumber(

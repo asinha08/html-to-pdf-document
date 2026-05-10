@@ -13,6 +13,8 @@ import type {
   ResolvedHtmlToPDFOptions
 } from "./types";
 
+const CAPTURE_BOTTOM_BUFFER_PX = 32;
+
 export class HtmlToPDFWorker implements HtmlToPDFWorkerContract {
   private options: ResolvedHtmlToPDFOptions;
   private source?: HtmlToPDFSource;
@@ -106,17 +108,26 @@ export class HtmlToPDFWorker implements HtmlToPDFWorkerContract {
 
     try {
       await waitForRenderableAssets(preparedSource.element);
-      return await html2canvas(preparedSource.element, this.createHtml2CanvasOptions());
+      return await html2canvas(
+        preparedSource.element,
+        this.createHtml2CanvasOptions(preparedSource.element)
+      );
     } finally {
       preparedSource.cleanup();
     }
   }
 
-  private createHtml2CanvasOptions(): Partial<Html2CanvasOptions> {
-    const userOnclone = this.options.html2canvas.onclone;
+  private createHtml2CanvasOptions(element: HTMLElement): Partial<Html2CanvasOptions> {
+    const html2canvasOptions = this.options.html2canvas;
+    const userOnclone = html2canvasOptions.onclone;
+    const captureDimensions = getCaptureDimensions(element);
 
     return {
-      ...this.options.html2canvas,
+      ...html2canvasOptions,
+      width: html2canvasOptions.width ?? captureDimensions.width,
+      height: html2canvasOptions.height ?? captureDimensions.height,
+      windowWidth: html2canvasOptions.windowWidth ?? captureDimensions.windowWidth,
+      windowHeight: html2canvasOptions.windowHeight ?? captureDimensions.windowHeight,
       onclone: (clonedDocument, clonedElement) => {
         clonedElement.style.fontFamily = this.options.fontFamily;
         userOnclone?.(clonedDocument, clonedElement);
@@ -133,6 +144,52 @@ export class HtmlToPDFWorker implements HtmlToPDFWorkerContract {
     this.canvasTask = undefined;
     this.pdfTask = undefined;
   }
+}
+
+interface CaptureDimensions {
+  width: number;
+  height: number;
+  windowWidth: number;
+  windowHeight: number;
+}
+
+function getCaptureDimensions(element: HTMLElement): CaptureDimensions {
+  const ownerDocument = element.ownerDocument;
+  const documentElement = ownerDocument.documentElement;
+  const body = ownerDocument.body;
+  const rect = element.getBoundingClientRect();
+  const includeDocumentDimensions = element === body || element === documentElement;
+  const widthCandidates = [element.scrollWidth, element.offsetWidth, element.clientWidth, rect.width, 1];
+  const heightCandidates = [element.scrollHeight, element.offsetHeight, element.clientHeight, rect.height, 1];
+
+  if (includeDocumentDimensions) {
+    widthCandidates.push(
+      documentElement.scrollWidth,
+      documentElement.offsetWidth,
+      documentElement.clientWidth,
+      body?.scrollWidth ?? 0,
+      body?.offsetWidth ?? 0,
+      body?.clientWidth ?? 0
+    );
+    heightCandidates.push(
+      documentElement.scrollHeight,
+      documentElement.offsetHeight,
+      documentElement.clientHeight,
+      body?.scrollHeight ?? 0,
+      body?.offsetHeight ?? 0,
+      body?.clientHeight ?? 0
+    );
+  }
+
+  const width = Math.ceil(Math.max(...widthCandidates));
+  const height = Math.ceil(Math.max(...heightCandidates)) + CAPTURE_BOTTOM_BUFFER_PX;
+
+  return {
+    width,
+    height,
+    windowWidth: Math.max(width, ownerDocument.defaultView?.innerWidth ?? 0),
+    windowHeight: Math.max(height, ownerDocument.defaultView?.innerHeight ?? 0)
+  };
 }
 
 export function htmlToPDF(options?: HtmlToPDFOptions): HtmlToPDFWorker {
