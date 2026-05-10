@@ -1,6 +1,6 @@
 {
   "name": "html-to-pdf-document",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A TypeScript-first browser library for converting HTML elements into downloadable PDF documents.",
   "type": "module",
   "license": "MIT",
