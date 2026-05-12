@@ -131,10 +131,10 @@ function findPageSliceEndY(
     return renderableCanvasHeight;
   }
 
-  const minEndY = Math.max(sliceStartY + 1, sliceStartY + Math.floor(sliceHeight * 0.72));
-  const searchBackHeight = Math.min(160, Math.max(24, Math.floor(sliceHeight * 0.12)));
+  const minEndY = Math.max(sliceStartY + 1, sliceStartY + Math.floor(sliceHeight * 0.55));
+  const searchBackHeight = Math.min(720, Math.max(160, Math.floor(sliceHeight * 0.3)));
   const searchStartY = Math.max(minEndY, desiredEndY - searchBackHeight);
-  const bandHeight = Math.min(12, Math.max(4, Math.floor(sliceHeight * 0.006)));
+  const bandHeight = Math.min(5, Math.max(2, Math.floor(sliceHeight * 0.002)));
   const blankBandEndY = findBlankBandEndY(canvas, searchStartY, desiredEndY, bandHeight);
 
   return blankBandEndY ?? desiredEndY;
@@ -170,7 +170,7 @@ function getRenderableCanvasHeight(canvas: HTMLCanvasElement, sliceHeight: numbe
     return canvas.height;
   }
 
-  const maxTrailingBlankSliceHeight = Math.max(1, Math.floor(sliceHeight * 0.05));
+  const maxTrailingBlankSliceHeight = Math.max(1, Math.floor(sliceHeight * 0.2));
 
   if (trailingSliceHeight > maxTrailingBlankSliceHeight) {
     return canvas.height;
